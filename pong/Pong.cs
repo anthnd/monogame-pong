@@ -15,31 +15,20 @@ namespace pong
 
         private static KeyboardState oldState;
 
-        private int winWidth = 800;
-        private int winHeight = 600;
+        private static int winWidth = 800;
+        private static int winHeight = 600;
 
         private Paddle playerPaddle;
         private Paddle computerPaddle;
-
-        public static KeyboardState OldState
-        {
-            get
-            {
-                return oldState;
-            }
-
-            set
-            {
-                oldState = value;
-            }
-        }
+        private Ball ball;
 
         public Pong()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            playerPaddle = new Paddle(new Vector2(0, (winHeight-Paddle.paddleHeight)/2));
-            computerPaddle = new Paddle(new Vector2(winWidth - Paddle.paddleWidth, (winHeight - Paddle.paddleHeight) / 2));
+            playerPaddle = new Paddle(new Vector2(0, (winHeight-Paddle.height)/2));
+            computerPaddle = new Paddle(new Vector2(winWidth - Paddle.width, (winHeight - Paddle.height) / 2));
+            ball = new Ball(new Vector2((winWidth - Ball.Size) / 2, (winHeight - Ball.Size) / 2));
 
 
             graphics.PreferredBackBufferWidth = winWidth;
@@ -54,8 +43,10 @@ namespace pong
         /// </summary>
         protected override void Initialize()
         {
+            Console.WriteLine("Start!");
             playerPaddle.Initialize(this.GraphicsDevice);
             computerPaddle.Initialize(this.GraphicsDevice);
+            ball.Initialize(this.GraphicsDevice);
             base.Initialize();
         }
 
@@ -93,6 +84,9 @@ namespace pong
             KeyboardState state = Keyboard.GetState();
 
             playerPaddle.Update(state, this.GraphicsDevice);
+            ball.Update(this.GraphicsDevice);
+
+            CheckCollisions();
 
             base.Update(gameTime);
         }
@@ -108,9 +102,57 @@ namespace pong
             spriteBatch.Begin();
             spriteBatch.Draw(playerPaddle.Texture, playerPaddle.Position);
             spriteBatch.Draw(computerPaddle.Texture, computerPaddle.Position);
+            spriteBatch.Draw(ball.Texture, ball.Position);
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        public void CheckCollisions()
+        {
+            if (ball.Rectangle.Intersects(playerPaddle.Rectangle) || ball.Rectangle.Intersects(computerPaddle.Rectangle))
+            {
+                Console.WriteLine("Collision!");
+            }
+        }
+
+        public static KeyboardState OldState
+        {
+            get
+            {
+                return oldState;
+            }
+
+            set
+            {
+                oldState = value;
+            }
+        }
+
+        public static int WinWidth
+        {
+            get
+            {
+                return winWidth;
+            }
+
+            set
+            {
+                winWidth = value;
+            }
+        }
+
+        public static int WinHeight
+        {
+            get
+            {
+                return winHeight;
+            }
+
+            set
+            {
+                winHeight = value;
+            }
         }
     }
 }
