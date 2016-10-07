@@ -17,6 +17,7 @@ namespace pong
         private Texture2D texture;
         private Vector2 position;
         private Rectangle rectangle;
+        private int counter = 0;
 
         public static int height = 90;
         public static int width = 10;
@@ -59,7 +60,10 @@ namespace pong
                     position.Y -= speed;
                 }  
             }
-            Console.WriteLine("Paddle: " + rectangle.Location);
+            if (counter % 20 == 0)
+            {
+                Console.WriteLine("Paddle: " + rectangle.Location);
+            }
             Pong.OldState = state;
         }
 

@@ -18,6 +18,7 @@ namespace pong
         private Rectangle rectangle;
         private Vector2 position;
         private Vector2 velocity;
+        private int counter = 0;
 
         public static int size = 8;
         private int speed = 4;
@@ -29,11 +30,12 @@ namespace pong
         public Ball(Vector2 initialPos)
         {
             Position = initialPos;
+            rectangle.Location = new Point((int)initialPos.X, (int)initialPos.Y);
 
             // Find a random direction for the ball to start going in and set the velocity accordingly
             Random rand = new Random();
             double angle = rand.NextDouble();
-            float rad = MathHelper.Lerp(0, (float)Math.PI * 2, (float)angle);
+            float rad = MathHelper.Lerp(0, (float)Math.PI /** 2*/, (float)angle);
             velocity = new Vector2((float) (speed*Math.Cos(rad)), (float) (speed*Math.Sin(rad)));
         }
 
@@ -61,7 +63,20 @@ namespace pong
             position.Y += (int)velocity.Y;
             rectangle.Offset((int)velocity.X, (int)velocity.Y);
             BounceOffTopBottom();
-            Console.WriteLine("Ball: " + rectangle.Location);
+            if (counter % 20 == 0)
+            {
+                Console.WriteLine("Ball: " + rectangle.Location);
+            }
+        }
+
+        public void BounceHorizontal()
+        {
+            velocity.X *= -1;
+        }
+
+        public void BounceVertical()
+        {
+            velocity.Y *= -1;
         }
 
         /// <summary>
@@ -71,7 +86,7 @@ namespace pong
         {
             if (position.Y <= 0 || position.Y+size >= Pong.WinHeight)
             {
-                velocity.Y *= -1;
+                BounceVertical();
             }
         }
 
@@ -137,6 +152,19 @@ namespace pong
             set
             {
                 rectangle = value;
+            }
+        }
+
+        public Vector2 Velocity
+        {
+            get
+            {
+                return velocity;
+            }
+
+            set
+            {
+                velocity = value;
             }
         }
     }

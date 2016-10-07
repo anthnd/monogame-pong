@@ -58,7 +58,7 @@ namespace pong
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
+              
             // TODO: use this.Content to load your game content here
         }
 
@@ -112,7 +112,7 @@ namespace pong
         {
             if (ball.Rectangle.Intersects(playerPaddle.Rectangle) || ball.Rectangle.Intersects(computerPaddle.Rectangle))
             {
-                Console.WriteLine("Collision!");
+                ball.BounceHorizontal();
             }
         }
 
