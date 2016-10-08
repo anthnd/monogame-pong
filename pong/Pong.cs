@@ -58,8 +58,10 @@ namespace pong
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-              
-            // TODO: use this.Content to load your game content here
+
+
+            ball.Texture = Content.Load<Texture2D>("graphics/aquaball");
+            //ball.Rectangle = new Rectangle(, 100, bear0.Width, bear0.Height);
         }
 
         /// <summary>
@@ -83,7 +85,8 @@ namespace pong
 
             KeyboardState state = Keyboard.GetState();
 
-            playerPaddle.Update(state, this.GraphicsDevice);
+            playerPaddle.Update(state, this.GraphicsDevice, Keys.W, Keys.S);
+            computerPaddle.Update(state, this.GraphicsDevice);
             ball.Update(this.GraphicsDevice);
 
             CheckCollisions();
@@ -102,7 +105,7 @@ namespace pong
             spriteBatch.Begin();
             spriteBatch.Draw(playerPaddle.Texture, playerPaddle.Position);
             spriteBatch.Draw(computerPaddle.Texture, computerPaddle.Position);
-            spriteBatch.Draw(ball.Texture, ball.Position);
+            spriteBatch.Draw(ball.Texture, ball.Rectangle, Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -112,7 +115,7 @@ namespace pong
         {
             if (ball.Rectangle.Intersects(playerPaddle.Rectangle) || ball.Rectangle.Intersects(computerPaddle.Rectangle))
             {
-                ball.BounceHorizontal();
+                ball.BounceOffPaddle(playerPaddle);
             }
         }
 

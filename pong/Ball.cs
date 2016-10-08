@@ -20,7 +20,8 @@ namespace pong
         private Vector2 velocity;
         private int counter = 0;
 
-        public static int size = 8;
+        private float maxBounceAngle = (float) (75 * (Math.PI/180));
+        public static int size = 22;
         private int speed = 4;
 
         /// <summary>
@@ -30,12 +31,12 @@ namespace pong
         public Ball(Vector2 initialPos)
         {
             Position = initialPos;
-            rectangle.Location = new Point((int)initialPos.X, (int)initialPos.Y);
+            rectangle = new Rectangle((int)initialPos.X, (int)initialPos.Y, size, size);
 
             // Find a random direction for the ball to start going in and set the velocity accordingly
             Random rand = new Random();
             double angle = rand.NextDouble();
-            float rad = MathHelper.Lerp(0, (float)Math.PI /** 2*/, (float)angle);
+            float rad = MathHelper.Lerp(0, (float)Math.PI * 2, (float)angle);
             velocity = new Vector2((float) (speed*Math.Cos(rad)), (float) (speed*Math.Sin(rad)));
         }
 
@@ -45,12 +46,12 @@ namespace pong
         /// <param name="gd">GraphicsDevice Object</param>
         public void Initialize(GraphicsDevice gd)
         { 
-            texture = new Texture2D(gd, size, size);
-            Color[] colorData = new Color[size * size];
-            for (int i = 0; i < (size * size); i++)
-                colorData[i] = Color.White;
+            //texture = new Texture2D(gd, size, size);
+            //Color[] colorData = new Color[size * size];
+            //for (int i = 0; i < (size * size); i++)
+            //    colorData[i] = Color.White;
 
-            texture.SetData<Color>(colorData);
+            //texture.SetData<Color>(colorData);
         }
 
         /// <summary>
@@ -63,9 +64,27 @@ namespace pong
             position.Y += (int)velocity.Y;
             rectangle.Offset((int)velocity.X, (int)velocity.Y);
             BounceOffTopBottom();
-            if (counter % 20 == 0)
+            if (counter % 100 == 0)
             {
-                Console.WriteLine("Ball: " + rectangle.Location);
+               Console.WriteLine("Ball speed: " + Velocity.ToString());
+            }
+        }
+
+        public void BounceOffPaddle(Paddle pdl)
+        {
+           
+            float ratio = (pdl.Rectangle.Center.Y - rectangle.Center.Y) / Paddle.height;
+            Console.WriteLine(pdl.Rectangle.Center.Y + ", " + rectangle.Center.Y);
+            float bounceAngle = ratio * maxBounceAngle;
+            Console.WriteLine(ratio + ", " + bounceAngle);
+            if (velocity.X > 0)
+            {
+                velocity.X = (float) Math.Cos(Math.PI - bounceAngle);
+                velocity.Y = (float)Math.Sin(Math.PI - bounceAngle);
+            } else
+            {
+                velocity.X = (float)Math.Cos(bounceAngle);
+                velocity.Y = (float)Math.Sin(bounceAngle);
             }
         }
 
@@ -77,6 +96,11 @@ namespace pong
         public void BounceVertical()
         {
             velocity.Y *= -1;
+        }
+
+        public void printLocation()
+        {
+            Console.WriteLine(rectangle.Location);
         }
 
         /// <summary>

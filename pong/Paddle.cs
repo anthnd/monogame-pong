@@ -19,7 +19,7 @@ namespace pong
         private Rectangle rectangle;
         private int counter = 0;
 
-        public static int height = 90;
+        public static int height = 110;
         public static int width = 10;
         private int speed = 6;
         
@@ -43,8 +43,8 @@ namespace pong
             texture.SetData<Color>(colorData);
         }
 
-        public void Update(KeyboardState state, GraphicsDevice gd) {
-            if (state.IsKeyDown(Keys.Down))
+        public void Update(KeyboardState state, GraphicsDevice gd, Keys UpKey = Keys.Up, Keys DownKey = Keys.Down) {
+            if (state.IsKeyDown(DownKey))
             {
                 if (position.Y < (gd.Viewport.Height - height))
                 {
@@ -52,7 +52,7 @@ namespace pong
                     position.Y += speed;
                 }
             }
-            else if (state.IsKeyDown(Keys.Up))
+            else if (state.IsKeyDown(UpKey))
             {
                 if (position.Y > 0)
                 {
@@ -62,9 +62,14 @@ namespace pong
             }
             if (counter % 20 == 0)
             {
-                Console.WriteLine("Paddle: " + rectangle.Location);
+                //Console.WriteLine("Paddle: " + rectangle.Location);
             }
             Pong.OldState = state;
+        }
+
+        public void printLocation()
+        {
+            Console.WriteLine(rectangle.Location);
         }
 
         public Vector2 Position
