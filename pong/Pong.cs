@@ -10,26 +10,38 @@ namespace pong
     /// </summary>
     public class Pong : Game
     {
+        // Default
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
-        private static KeyboardState oldState;
-
+        // GUI settings
         private static int winWidth = 800;
         private static int winHeight = 600;
 
-        private Paddle playerPaddle;
-        private Paddle computerPaddle;
-        private Ball ball;
+        // Initializing objects and keyboard reader
+        GameObject topWall;
+        GameObject bottomWall;
+        GameObject playerOne;
+        GameObject playerTwo;
+        GameObject ball;
+        KeyboardState keyboardState;
+
+        // Gane variables
+        int wallThickness = 20;
+        int paddleHeight = 100;
+        int paddleThickness = 10;
+        float paddleSpeed = 7.5f;
+        int ballSize = 15;
+        float maxBounceAngle = (float)(60 * (Math.PI / 180));
+        int speedComponent = 6;
+        int counter = 0;
+
+
 
         public Pong()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            playerPaddle = new Paddle(new Vector2(0, (winHeight-Paddle.height)/2));
-            computerPaddle = new Paddle(new Vector2(winWidth - Paddle.width, (winHeight - Paddle.height) / 2));
-            ball = new Ball(new Vector2((winWidth - Ball.Size) / 2, (winHeight - Ball.Size) / 2));
-
 
             graphics.PreferredBackBufferWidth = winWidth;
             graphics.PreferredBackBufferHeight = winHeight;
@@ -44,9 +56,63 @@ namespace pong
         protected override void Initialize()
         {
             Console.WriteLine("Start!");
-            playerPaddle.Initialize(this.GraphicsDevice);
-            computerPaddle.Initialize(this.GraphicsDevice);
-            ball.Initialize(this.GraphicsDevice);
+
+            Texture2D generalTexture = new Texture2D(this.GraphicsDevice, 1, 1);
+            generalTexture.SetData(new[] { Color.White });
+
+            topWall = new GameObject
+                (
+                    generalTexture,
+                    Vector2.Zero,
+                    GraphicsDevice.Viewport.Width,
+                    wallThickness
+                );
+            bottomWall = new GameObject
+                (
+                    generalTexture,
+                    new Vector2
+                    (
+                        0,
+                        GraphicsDevice.Viewport.Height - wallThickness
+                    ),
+                    GraphicsDevice.Viewport.Width,
+                    wallThickness
+                );
+            playerOne = new GameObject
+                (
+                    generalTexture,
+                    new Vector2
+                    (
+                        0,
+                        (GraphicsDevice.Viewport.Height - paddleHeight) / 2
+                    ),
+                    paddleThickness,
+                    paddleHeight
+                );
+            playerTwo = new GameObject
+                (
+                    generalTexture,
+                    new Vector2
+                    (
+                        GraphicsDevice.Viewport.Width - paddleThickness,
+                        (GraphicsDevice.Viewport.Height - paddleHeight) / 2
+                    ),
+                    paddleThickness,
+                    paddleHeight
+                );
+            ball = new GameObject
+                (
+                    generalTexture,
+                    new Vector2
+                    (
+                        playerOne.Rectangle.Right + 5,
+                        (GraphicsDevice.Viewport.Height - ballSize) / 2
+                    ),
+                    new Vector2((float)speedComponent, (float)-speedComponent),
+                    ballSize,
+                    ballSize
+                );
+
             base.Initialize();
         }
 
@@ -59,9 +125,6 @@ namespace pong
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-
-            ball.Texture = Content.Load<Texture2D>("graphics/aquaball");
-            //ball.Rectangle = new Rectangle(, 100, bear0.Width, bear0.Height);
         }
 
         /// <summary>
@@ -83,13 +146,30 @@ namespace pong
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            KeyboardState state = Keyboard.GetState();
+            ball.Position += ball.Velocity;
 
-            playerPaddle.Update(state, this.GraphicsDevice, Keys.W, Keys.S);
-            computerPaddle.Update(state, this.GraphicsDevice);
-            ball.Update(this.GraphicsDevice);
+            keyboardState = Keyboard.GetState();
 
-            CheckCollisions();
+            if (keyboardState.IsKeyDown(Keys.W))
+                playerOne.Position.Y -= paddleSpeed;
+
+            if (keyboardState.IsKeyDown(Keys.S))
+                playerOne.Position.Y += paddleSpeed;
+
+            if (keyboardState.IsKeyDown(Keys.Up))
+                playerTwo.Position.Y -= paddleSpeed;
+
+            if (keyboardState.IsKeyDown(Keys.Down))
+                playerTwo.Position.Y += paddleSpeed;
+
+            playerTwo.Position.Y = ball.Position.Y;
+
+            CheckPaddleWallCollision();
+            CheckBallCollision();
+
+            if (counter % 60 == 0)
+                Console.WriteLine(ball.Velocity);
+            counter++;
 
             base.Update(gameTime);
         }
@@ -103,59 +183,85 @@ namespace pong
             GraphicsDevice.Clear(new Color(30, 30, 30));
 
             spriteBatch.Begin();
-            spriteBatch.Draw(playerPaddle.Texture, playerPaddle.Position);
-            spriteBatch.Draw(computerPaddle.Texture, computerPaddle.Position);
-            spriteBatch.Draw(ball.Texture, ball.Rectangle, Color.White);
+            spriteBatch.Draw(topWall.Texture, topWall.Rectangle, Color.LimeGreen);
+            spriteBatch.Draw(bottomWall.Texture, bottomWall.Rectangle, Color.LimeGreen);
+            spriteBatch.Draw(playerOne.Texture, playerOne.Rectangle, new Color(32, 148, 250));
+            spriteBatch.Draw(playerTwo.Texture, playerTwo.Rectangle, new Color(255, 59, 48));
+            spriteBatch.Draw(ball.Texture, ball.Rectangle, new Color(255, 230, 31));
             spriteBatch.End();
 
             base.Draw(gameTime);
         }
 
-        public void CheckCollisions()
+        /// <summary>
+        /// Checks for ball collision with walls, paddle and out of boundary
+        /// </summary>
+        private void CheckBallCollision()
         {
-            if (ball.Rectangle.Intersects(playerPaddle.Rectangle) || ball.Rectangle.Intersects(computerPaddle.Rectangle))
+            if (ball.Rectangle.Intersects(topWall.Rectangle) || ball.Rectangle.Intersects(bottomWall.Rectangle))
+                ball.Velocity.Y *= -1;
+
+            if (ball.Rectangle.Intersects(playerOne.Rectangle))
             {
-                ball.BounceOffPaddle(playerPaddle);
+                var relativeIntersectY = (playerOne.Rectangle.Center.Y) - ball.Rectangle.Center.Y;
+                var normalizedRelativeIntersectionY = (double)relativeIntersectY / (paddleHeight / 2);
+                var bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle;
+                ball.Velocity.X = Speed * (float)Math.Cos(bounceAngle);
+                ball.Velocity.Y = Speed * (float)-Math.Sin(bounceAngle);
             }
+            
+            if (ball.Rectangle.Intersects(playerTwo.Rectangle))
+            {
+                var relativeIntersectY = (playerTwo.Rectangle.Center.Y) - ball.Rectangle.Center.Y;
+                var normalizedRelativeIntersectionY = (double)relativeIntersectY / (paddleHeight / 2);
+                var bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle;
+                ball.Velocity.X = Speed * (float)-Math.Cos(bounceAngle);
+                ball.Velocity.Y = Speed * (float)-Math.Sin(bounceAngle);
+            }
+
+            if (ball.Position.X < -ball.Rectangle.Width || ball.Position.X > GraphicsDevice.Viewport.Width)
+                SetInStartPosition();
         }
 
-        public static KeyboardState OldState
+        /// <summary>
+        /// Reset ball and paddles
+        /// </summary>
+        private void SetInStartPosition()
+        {
+            playerOne.Position.Y = (GraphicsDevice.Viewport.Height - paddleHeight) / 2;
+
+            playerTwo.Position.Y = (GraphicsDevice.Viewport.Height - paddleHeight) / 2;
+
+            ball.Position = new Vector2(playerOne.Rectangle.Right + 5, (GraphicsDevice.Viewport.Height - ballSize) / 2);
+            ball.Velocity = new Vector2((float)speedComponent, (float)-speedComponent);
+        }
+
+        /// <summary>
+        /// Restrict paddle from going past wall
+        /// </summary>
+        private void CheckPaddleWallCollision()
+        {
+            if (playerOne.Rectangle.Intersects(topWall.Rectangle))
+                playerOne.Position.Y = topWall.Rectangle.Bottom;
+
+            if (playerOne.Rectangle.Intersects(bottomWall.Rectangle))
+                playerOne.Position.Y = bottomWall.BoundingBox.Y - playerOne.Height;
+
+            if (playerTwo.Rectangle.Intersects(topWall.Rectangle))
+                playerTwo.Position.Y = topWall.Rectangle.Bottom;
+
+            if (playerTwo.Rectangle.Intersects(bottomWall.Rectangle))
+                playerTwo.Position.Y = bottomWall.BoundingBox.Y - playerTwo.Height;
+
+        }
+
+        private float Speed
         {
             get
             {
-                return oldState;
-            }
-
-            set
-            {
-                oldState = value;
+                return (float) Math.Sqrt(2 * speedComponent * speedComponent);
             }
         }
 
-        public static int WinWidth
-        {
-            get
-            {
-                return winWidth;
-            }
-
-            set
-            {
-                winWidth = value;
-            }
-        }
-
-        public static int WinHeight
-        {
-            get
-            {
-                return winHeight;
-            }
-
-            set
-            {
-                winHeight = value;
-            }
-        }
     }
 }
