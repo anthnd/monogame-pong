@@ -37,7 +37,9 @@ namespace pong
         int counter = 0;
 
 
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public Pong()
         {
             graphics = new GraphicsDeviceManager(this);

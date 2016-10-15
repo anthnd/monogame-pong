@@ -17,6 +17,9 @@ namespace pong
         public int Width;
         public int Height;
 
+        /// <summary>
+        /// Rectangle for objects without an imported texture
+        /// </summary>
         public Rectangle Rectangle
         {
             get
@@ -30,6 +33,9 @@ namespace pong
             }
         }
 
+        /// <summary>
+        /// Rectangle for objects with an imported texture
+        /// </summary>
         public Rectangle BoundingBox
         {
             get
@@ -43,12 +49,23 @@ namespace pong
             }
         }
 
+        /// <summary>
+        /// Create a new GameObject with an imported texture
+        /// </summary>
+        /// <param name="texture">Texture to use for the object. A Texture2D Object</param>
+        /// <param name="position">Initial position. A Vector2 Object</param>
         public GameObject(Texture2D texture, Vector2 position)
         {
             this.Texture = texture;
             this.Position = position;
         }
 
+        /// <summary>
+        /// Create a new GameObject with an imported texture
+        /// </summary>
+        /// <param name="texture">Texture to use for the object. A Texture2D Object</param>
+        /// <param name="position">Initial position. A Vector2 Object</param>
+        /// <param name="velocity">Initial velocity. A Vector2 Object</param>
         public GameObject(Texture2D texture, Vector2 position, Vector2 velocity)
         {
             this.Texture = texture;
@@ -56,6 +73,13 @@ namespace pong
             this.Velocity = velocity;
         }
 
+        /// <summary>
+        /// Create a new GameObject without an imported texture
+        /// </summary>
+        /// <param name="texture">Texture to use for the object. A Texture2D Object</param>
+        /// <param name="position">Initial position. A Vector2 Object</param>
+        /// <param name="width">Width of the new GameObject</param>
+        /// <param name="height">Height of the new GameObject</param>
         public GameObject(Texture2D texture, Vector2 position, int width, int height)
         {
             this.Texture = texture;
@@ -64,6 +88,14 @@ namespace pong
             this.Height = height;
         }
 
+        /// <summary>
+        /// Create a new GameObject without an imported texture
+        /// </summary>
+        /// <param name="texture">Texture to use for the object. A Texture2D Object</param>
+        /// <param name="position">Initial position. A Vector2 Object</param>
+        /// <param name="velocity">Initial velocity. A Vector2 Object</param>
+        /// <param name="width">Width of the new GameObject</param>
+        /// <param name="height">Height of the new GameObject</param>
         public GameObject(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
         {
             this.Texture = texture;
