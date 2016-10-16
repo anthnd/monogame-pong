@@ -18,7 +18,7 @@ namespace pong
         public int Height;
 
         /// <summary>
-        /// Rectangle for objects without an imported texture
+        /// Rectangle for GameObjects without an imported texture
         /// </summary>
         public Rectangle Rectangle
         {
@@ -34,7 +34,7 @@ namespace pong
         }
 
         /// <summary>
-        /// Rectangle for objects with an imported texture
+        /// Rectangle for GameObjects with an imported texture
         /// </summary>
         public Rectangle BoundingBox
         {
@@ -105,9 +105,15 @@ namespace pong
             this.Height = height;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        /// <summary>
+        /// Faster way of drawing GameObjects
+        /// </summary>
+        /// <param name="spriteBatch">A SpriteBatch instance</param>
+        /// <param name="color">Color for the GameObject to be rendered. Default is white.</param>
+        public void Draw(SpriteBatch spriteBatch, Color? color = null)
         {
-            spriteBatch.Draw(Texture, Position, Color.White);
+            Color c = color ?? Color.White;
+            spriteBatch.Draw(Texture, Rectangle, c);
         }
 
     }

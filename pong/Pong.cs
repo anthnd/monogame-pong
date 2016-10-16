@@ -15,26 +15,29 @@ namespace pong
         private SpriteBatch spriteBatch;
 
         // GUI settings
-        private static int winWidth = 800;
-        private static int winHeight = 600;
+        private static int winWidth = 640;
+        private static int winHeight = 480;
 
         // Initializing objects and keyboard reader
-        GameObject topWall;
-        GameObject bottomWall;
-        GameObject playerOne;
-        GameObject playerTwo;
-        GameObject ball;
+        GameObject topWall, bottomWall, playerOne, playerTwo, ball;
         KeyboardState keyboardState;
+        SpriteFont font;
 
         // Gane variables
         int wallThickness = 20;
-        int paddleHeight = 100;
-        int paddleThickness = 10;
-        float paddleSpeed = 7.5f;
-        int ballSize = 15;
+
+        int paddleHeight = 95;
+        int paddleThickness = 12;
+        float paddleSpeed = 5.5f;
+
+        int ballSize = 17;
         float maxBounceAngle = (float)(60 * (Math.PI / 180));
-        int speedComponent = 6;
-        int counter = 0;
+        float speedComponent = 7.0f;
+
+        int playerOneScore = 0;
+        int playerTwoScore = 0;
+
+
 
 
         /// <summary>
@@ -57,8 +60,7 @@ namespace pong
         /// </summary>
         protected override void Initialize()
         {
-            Console.WriteLine("Start!");
-
+            // Make texture for all GameObjects
             Texture2D generalTexture = new Texture2D(this.GraphicsDevice, 1, 1);
             generalTexture.SetData(new[] { Color.White });
 
@@ -69,6 +71,7 @@ namespace pong
                     GraphicsDevice.Viewport.Width,
                     wallThickness
                 );
+
             bottomWall = new GameObject
                 (
                     generalTexture,
@@ -80,6 +83,7 @@ namespace pong
                     GraphicsDevice.Viewport.Width,
                     wallThickness
                 );
+
             playerOne = new GameObject
                 (
                     generalTexture,
@@ -91,6 +95,7 @@ namespace pong
                     paddleThickness,
                     paddleHeight
                 );
+
             playerTwo = new GameObject
                 (
                     generalTexture,
@@ -102,12 +107,13 @@ namespace pong
                     paddleThickness,
                     paddleHeight
                 );
+
             ball = new GameObject
                 (
                     generalTexture,
                     new Vector2
                     (
-                        playerOne.Rectangle.Right + 5,
+                        (GraphicsDevice.Viewport.Width - ballSize) / 2,
                         (GraphicsDevice.Viewport.Height - ballSize) / 2
                     ),
                     new Vector2((float)speedComponent, (float)-speedComponent),
@@ -126,7 +132,7 @@ namespace pong
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
+            font = Content.Load<SpriteFont>("Score");
         }
 
         /// <summary>
@@ -148,32 +154,47 @@ namespace pong
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            ball.Position += ball.Velocity;
-
             keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.W))
-                playerOne.Position.Y -= paddleSpeed;
+            ball.Position += ball.Velocity;
 
-            if (keyboardState.IsKeyDown(Keys.S))
-                playerOne.Position.Y += paddleSpeed;
-
-            if (keyboardState.IsKeyDown(Keys.Up))
-                playerTwo.Position.Y -= paddleSpeed;
-
-            if (keyboardState.IsKeyDown(Keys.Down))
-                playerTwo.Position.Y += paddleSpeed;
-
-            playerTwo.Position.Y = ball.Position.Y;
-
+            MovePaddlesOnInput();
+            FollowBall();
             CheckPaddleWallCollision();
             CheckBallCollision();
 
-            if (counter % 60 == 0)
-                Console.WriteLine(ball.Velocity);
-            counter++;
-
             base.Update(gameTime);
+        }
+
+        /// <summary>
+        /// Allows playerTwo's paddle to loosely follow the ball
+        /// </summary>
+        private void FollowBall()
+        {
+            if (ball.Rectangle.Center.Y > playerTwo.Rectangle.Center.Y)
+                playerTwo.Position.Y += paddleSpeed;
+            if (ball.Rectangle.Center.Y <= playerTwo.Rectangle.Center.Y)
+                playerTwo.Position.Y -= paddleSpeed;
+        }
+
+        /// <summary>
+        /// Detects keyboard input and moves paddles accordingly
+        /// Controls for playerOne are W to go up and S to go down
+        /// Controls for playerTwo are Up to go up and Down to go down
+        /// </summary>
+        private void MovePaddlesOnInput()
+        {
+            // Player one
+            if (keyboardState.IsKeyDown(Keys.W))
+                playerOne.Position.Y -= paddleSpeed;
+            if (keyboardState.IsKeyDown(Keys.S))
+                playerOne.Position.Y += paddleSpeed;
+
+            // Player two
+            if (keyboardState.IsKeyDown(Keys.Up))
+                playerTwo.Position.Y -= paddleSpeed;
+            if (keyboardState.IsKeyDown(Keys.Down))
+                playerTwo.Position.Y += paddleSpeed;
         }
 
         /// <summary>
@@ -182,14 +203,21 @@ namespace pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(new Color(30, 30, 30));
+            GraphicsDevice.Clear(new Color(30, 30, 38));
 
             spriteBatch.Begin();
-            spriteBatch.Draw(topWall.Texture, topWall.Rectangle, Color.LimeGreen);
-            spriteBatch.Draw(bottomWall.Texture, bottomWall.Rectangle, Color.LimeGreen);
-            spriteBatch.Draw(playerOne.Texture, playerOne.Rectangle, new Color(32, 148, 250));
-            spriteBatch.Draw(playerTwo.Texture, playerTwo.Rectangle, new Color(255, 59, 48));
-            spriteBatch.Draw(ball.Texture, ball.Rectangle, new Color(255, 230, 31));
+
+            // GameObjects
+            topWall.Draw(spriteBatch, Color.LimeGreen);
+            bottomWall.Draw(spriteBatch, Color.LimeGreen);
+            playerOne.Draw(spriteBatch, new Color(32, 148, 250));
+            playerTwo.Draw(spriteBatch, new Color(255, 59, 48));
+            ball.Draw(spriteBatch, new Color(255, 230, 31));
+
+            // Score
+            spriteBatch.DrawString(font, playerOneScore.ToString(), new Vector2(GraphicsDevice.Viewport.Width / 2 - 60, 100), Color.White);
+            spriteBatch.DrawString(font, playerTwoScore.ToString(), new Vector2(GraphicsDevice.Viewport.Width / 2 + 20, 100), Color.White);
+
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -200,9 +228,20 @@ namespace pong
         /// </summary>
         private void CheckBallCollision()
         {
-            if (ball.Rectangle.Intersects(topWall.Rectangle) || ball.Rectangle.Intersects(bottomWall.Rectangle))
+            // Wall bouncing
+            if (ball.Rectangle.Intersects(topWall.Rectangle))
+            {
+                ball.Position.Y = topWall.Rectangle.Bottom;
                 ball.Velocity.Y *= -1;
-
+            }
+            if (ball.Rectangle.Intersects(bottomWall.Rectangle))
+            {
+                ball.Position.Y = bottomWall.Rectangle.Y - ballSize;
+                ball.Velocity.Y *= -1;
+            }
+                
+            // Bounces the ball at an angle depending on its relative position to the center of the paddle
+            // Collisions to the extremities of the paddle means the ball bounces at a sharper angle
             if (ball.Rectangle.Intersects(playerOne.Rectangle))
             {
                 var relativeIntersectY = (playerOne.Rectangle.Center.Y) - ball.Rectangle.Center.Y;
@@ -211,7 +250,6 @@ namespace pong
                 ball.Velocity.X = Speed * (float)Math.Cos(bounceAngle);
                 ball.Velocity.Y = Speed * (float)-Math.Sin(bounceAngle);
             }
-            
             if (ball.Rectangle.Intersects(playerTwo.Rectangle))
             {
                 var relativeIntersectY = (playerTwo.Rectangle.Center.Y) - ball.Rectangle.Center.Y;
@@ -221,8 +259,18 @@ namespace pong
                 ball.Velocity.Y = Speed * (float)-Math.Sin(bounceAngle);
             }
 
-            if (ball.Position.X < -ball.Rectangle.Width || ball.Position.X > GraphicsDevice.Viewport.Width)
+            // Resets paddles and ball and increments the appropriate score
+            if (ball.Position.X < -ball.Rectangle.Width - 100)
+            {
+                playerTwoScore++;
                 SetInStartPosition();
+            }
+            if (ball.Position.X > GraphicsDevice.Viewport.Width + 100)
+            {
+                playerOneScore++;
+                SetInStartPosition();
+            }
+                
         }
 
         /// <summary>
@@ -230,11 +278,12 @@ namespace pong
         /// </summary>
         private void SetInStartPosition()
         {
+            // Reset paddles to vertical center
             playerOne.Position.Y = (GraphicsDevice.Viewport.Height - paddleHeight) / 2;
-
             playerTwo.Position.Y = (GraphicsDevice.Viewport.Height - paddleHeight) / 2;
 
-            ball.Position = new Vector2(playerOne.Rectangle.Right + 5, (GraphicsDevice.Viewport.Height - ballSize) / 2);
+            // Reset ball to center-center and give initial speed
+            ball.Position = new Vector2((GraphicsDevice.Viewport.Width - ballSize) / 2, (GraphicsDevice.Viewport.Height - ballSize) / 2);
             ball.Velocity = new Vector2((float)speedComponent, (float)-speedComponent);
         }
 
@@ -243,20 +292,23 @@ namespace pong
         /// </summary>
         private void CheckPaddleWallCollision()
         {
+            // Player one wall collisions
             if (playerOne.Rectangle.Intersects(topWall.Rectangle))
                 playerOne.Position.Y = topWall.Rectangle.Bottom;
-
             if (playerOne.Rectangle.Intersects(bottomWall.Rectangle))
                 playerOne.Position.Y = bottomWall.BoundingBox.Y - playerOne.Height;
 
+            // Player two wall collisions
             if (playerTwo.Rectangle.Intersects(topWall.Rectangle))
                 playerTwo.Position.Y = topWall.Rectangle.Bottom;
-
             if (playerTwo.Rectangle.Intersects(bottomWall.Rectangle))
                 playerTwo.Position.Y = bottomWall.BoundingBox.Y - playerTwo.Height;
 
         }
 
+        /// <summary>
+        /// Returns the hypotenuse where the legs are both equal to speedComponent
+        /// </summary>
         private float Speed
         {
             get
